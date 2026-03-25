@@ -12,7 +12,7 @@ dotenv.config()
 const app: Application = express()
 ;(async () => {
     await connectDB()
-    const port = process.env.SERVER_BACKUP_PORT || 8800
+    const port = process.env.SERVER_BACKUP_PORT || 8080
 
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(express.json())
