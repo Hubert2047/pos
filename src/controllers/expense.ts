@@ -1,7 +1,6 @@
 import type { Request, Response } from 'express'
 import Expense from "../models/expense.js";
 
-// tạo chi phí
 export const createExpense = async (req: Request, res: Response) => {
   try {
     const { label, amount, date, note } = req.body;
@@ -13,7 +12,6 @@ export const createExpense = async (req: Request, res: Response) => {
   }
 };
 
-// lấy chi phí theo ngày
 export const getExpenses = async (req: Request, res: Response) => {
   try {
     const { date } = req.query;
