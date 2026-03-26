@@ -1,9 +1,11 @@
 import { Router } from "express";
-import { createExpense, getExpenses } from "../controllers/expense.js";
+import { createExpense, deleteExpense, getExpenses, updateExpense } from "../controllers/expense.js";
 
 const router = Router();
 
 router.post("/", createExpense);
 router.get("/", getExpenses);
+router.put("/:id", updateExpense);     
+router.delete("/:id", deleteExpense); 
 
 export default router;
