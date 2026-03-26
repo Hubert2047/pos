@@ -1,9 +1,9 @@
 import type {Request, Response } from 'express'
-import Order from '../models/order.js'
+import Order, { type OrderItemModifier } from '../models/order.js'
 const calculateTotal = (items: any[]) => {
   return items.reduce((total, item) => {
     const modifierTotal = item.modifiers?.reduce(
-      (sum: number, mod: any) => sum + (mod.price_extra || 0),
+      (sum: number, mod: OrderItemModifier) => sum + (mod.priceExtra || 0) * mod.amount,
       0
     ) || 0;
 
