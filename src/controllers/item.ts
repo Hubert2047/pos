@@ -1,16 +1,39 @@
 import type { Request, Response } from 'express'
 import Item from '../models/item.js'
+import mongoose from 'mongoose'
 
 export const getItems = async (req: Request, res: Response) => {
     try {
-        const items = await Item.find().populate('categoryId', 'name').lean()
+        const { active } = req.query
+        const filter: any = {}
+        if (active) {
+            filter.active = active === 'true'
+        }
+
+        const items = await Item.find(filter)
+            .populate('categoryId', 'name')
+            .populate({
+                path: 'addons',
+                match: { active: true },
+                select: 'name priceExtra',
+            })
+            .lean()
+
         const result = items.map((item: any) => ({
             ...item,
             categoryName: item.categoryId?.name,
         }))
-        res.json({ success: true, data: result })
+
+        res.json({
+            success: true,
+            data: result,
+        })
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error fetching items', error })
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching items',
+            error,
+        })
     }
 }
 
@@ -37,6 +60,39 @@ export const createItem = async (req: Request, res: Response) => {
     }
 }
 
+export const createItem1 = async (data: {
+    name: string
+    basePrice: number
+    variants: string[] | null
+    addons: string[]
+    categoryId: string
+    noteOptions: string[]
+    active: boolean
+}) => {
+    try {
+        const existing = await Item.findOne({ name: data.name })
+        if (existing) {
+            console.log(`Item "${data.name}" đã tồn tại, bỏ qua.`)
+            return null
+        }
+        const addonsIds = data.addons.map((id) => new mongoose.Types.ObjectId(id))
+        const item = new Item({
+            name: data.name,
+            basePrice: data.basePrice,
+            variants: data.variants,
+            addons: addonsIds,
+            categoryId: new mongoose.Types.ObjectId(data.categoryId),
+            noteOptions: data.noteOptions,
+            active: data.active,
+        })
+        await item.save()
+        console.log(`Item "${data.name}" đã được tạo thành công.`)
+        return item
+    } catch (error) {
+        console.error('Create item failed:', error)
+        return null
+    }
+}
 export const updateItem = async (req: Request, res: Response) => {
     try {
         const { id } = req.params

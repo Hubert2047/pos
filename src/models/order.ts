@@ -1,28 +1,36 @@
 import mongoose, { Schema, Document } from 'mongoose'
-import { ModifierSchema, type Modifier } from './item.js'
 
-export const PAYMENT_METHODS = ['cash', 'uber', 'linepay', 'bank'] as const
-interface OrderItem {
-    item_id: mongoose.Types.ObjectId
-    name: string
-    quantity: number
-    basePrice: number
-    modifiers: Modifier[]
-    noteOptions: string[]
-    note: string
-}
-export interface OrderItemModifier {
+export const PAYMENT_METHODS = ['cash', 'uber', 'linepay', 'bank', 'foodpanda'] as const
+interface OrderItemAddon {
     name: string
     priceExtra: number
     amount: number
+}
+interface OrderItem {
+    itemId: mongoose.Types.ObjectId
+    name: string
+    quantity: number
+    basePrice: number
+    variant: string
+    addon: string[]
+    noteOptions: string[]
+    note: string
+}
+
+export interface OrderDiscount {
+    name: string
+    amount: number
+    type: 'percent' | 'value'
 }
 export interface IOrder extends Document {
     items: OrderItem[]
     totalPrice: number
     status: 'pending' | 'paid' | 'cancelled'
+    type: 'dine_in' | 'takeaway'
+    discount?: OrderDiscount
     paymentMethod: string
 }
-const OrderItemModifierSchema = new Schema<OrderItemModifier>(
+const OrderItemAddonSchema = new Schema<OrderItemAddon>(
     {
         name: String,
         priceExtra: Number,
@@ -30,13 +38,25 @@ const OrderItemModifierSchema = new Schema<OrderItemModifier>(
     },
     { _id: false },
 )
+const OrderDiscountSchema = new Schema<OrderDiscount>(
+    {
+        name: { type: String },
+        type: {
+            type: String,
+            enum: ['percent', 'value'],
+        },
+        amount: { type: Number },
+    },
+    { _id: false },
+)
 const OrderItemSchema = new Schema<OrderItem>(
     {
-        item_id: Schema.Types.ObjectId,
+        itemId: Schema.Types.ObjectId,
         name: String,
         quantity: { type: Number, default: 1 },
         basePrice: Number,
-        modifiers: [OrderItemModifierSchema],
+        variant: String,
+        addon: [OrderItemAddonSchema],
         noteOptions: [String],
         note: String,
     },
@@ -51,6 +71,15 @@ const OrderSchema = new Schema<IOrder>(
             type: String,
             enum: ['pending', 'paid', 'cancelled'],
             default: 'pending',
+        },
+        type: {
+            type: String,
+            enum: ['dine_in', 'takeaway'],
+            default: 'dine_in',
+        },
+        discount: {
+            type: OrderDiscountSchema,
+            default: null,
         },
         paymentMethod: {
             type: String,
