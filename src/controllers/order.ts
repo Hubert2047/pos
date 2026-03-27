@@ -1,85 +1,102 @@
 import type { Request, Response } from 'express'
-import Order, { type OrderItemModifier } from '../models/order.js'
+import Order, { type OrderItemAddon } from '../models/order.js'
 const calculateTotal = (items: any[]) => {
     return items.reduce((total, item) => {
         const modifierTotal =
-            item.modifiers?.reduce(
-                (sum: number, mod: OrderItemModifier) => sum + (mod.priceExtra || 0) * mod.amount,
-                0,
-            ) || 0
+            item.modifiers?.reduce((sum: number, mod: OrderItemAddon) => sum + (mod.priceExtra || 0) * mod.amount, 0) ||
+            0
 
         return total + (item.base_price + modifierTotal) * item.quantity
     }, 0)
 }
+
+export const getNextOrderNumber = async (req: Request, res: Response) => {
+    try {
+        const todayStart = new Date()
+        todayStart.setHours(0, 0, 0, 0)
+
+        const todayEnd = new Date()
+        todayEnd.setHours(23, 59, 59, 999)
+
+        const lastOrder = await Order.findOne({
+            date: { $gte: todayStart, $lte: todayEnd },
+        }).sort({ number: -1 })
+
+        const nextNumber = lastOrder ? lastOrder.number + 1 : 1
+
+        res.json({ success: true, nextNumber })
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Failed to get next number', error: err })
+    }
+}
 export const getCashOrders = async (req: Request, res: Response) => {
-  try {
-    const start = new Date()
-    start.setHours(0, 0, 0, 0)
-    const end = new Date()
-    end.setHours(23, 59, 59, 999)
+    try {
+        const start = new Date()
+        start.setHours(0, 0, 0, 0)
+        const end = new Date()
+        end.setHours(23, 59, 59, 999)
 
-    const cashOrders = await Order.find({
-      createdAt: { $gte: start, $lte: end },
-      status: 'paid',
-      paymentMethod: 'cash' 
-    })
+        const cashOrders = await Order.find({
+            createdAt: { $gte: start, $lte: end },
+            status: 'paid',
+            paymentMethod: 'cash',
+        })
 
-    const totalCash = cashOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0)
+        const totalCash = cashOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0)
 
-    res.json({
-      success: true,
-      totalCash,
-      count: cashOrders.length,
-      data: cashOrders
-    })
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching cash orders',
-      error
-    })
-  }
+        res.json({
+            success: true,
+            totalCash,
+            count: cashOrders.length,
+            data: cashOrders,
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching cash orders',
+            error,
+        })
+    }
 }
 export const getSalesByPaymentMethod = async (req: Request, res: Response) => {
-  try {
-    const start = new Date()
-    start.setHours(0, 0, 0, 0)
-    const end = new Date()
-    end.setHours(23, 59, 59, 999)
+    try {
+        const start = new Date()
+        start.setHours(0, 0, 0, 0)
+        const end = new Date()
+        end.setHours(23, 59, 59, 999)
 
-    const result = await Order.aggregate([
-      { 
-        $match: { 
-          createdAt: { $gte: start, $lte: end },
-          status: 'paid' 
-        } 
-      },
-      { 
-        $group: { 
-          _id: '$paymentMethod', 
-          totalSales: { $sum: '$totalPrice' },
-          count: { $sum: 1 } 
-        } 
-      }
-    ])
+        const result = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: start, $lte: end },
+                    status: 'paid',
+                },
+            },
+            {
+                $group: {
+                    _id: '$paymentMethod',
+                    totalSales: { $sum: '$totalPrice' },
+                    count: { $sum: 1 },
+                },
+            },
+        ])
 
-    const salesByMethod: Record<string, { totalSales: number, count: number }> = {}
-    result.forEach(r => {
-      salesByMethod[r._id] = { totalSales: r.totalSales, count: r.count }
-    })
+        const salesByMethod: Record<string, { totalSales: number; count: number }> = {}
+        result.forEach((r) => {
+            salesByMethod[r._id] = { totalSales: r.totalSales, count: r.count }
+        })
 
-    res.json({
-      success: true,
-      data: salesByMethod
-    })
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching sales by payment method',
-      error
-    })
-  }
+        res.json({
+            success: true,
+            data: salesByMethod,
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching sales by payment method',
+            error,
+        })
+    }
 }
 export const getTodaySales = async (req: Request, res: Response) => {
     try {

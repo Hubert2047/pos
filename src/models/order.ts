@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
 export const PAYMENT_METHODS = ['cash', 'uber', 'linepay', 'bank', 'foodpanda'] as const
-interface OrderItemAddon {
+export interface OrderItemAddon {
     name: string
     priceExtra: number
     amount: number
@@ -23,6 +23,7 @@ export interface OrderDiscount {
     type: 'percent' | 'value'
 }
 export interface IOrder extends Document {
+    number: number
     items: OrderItem[]
     totalPrice: number
     status: 'pending' | 'paid' | 'cancelled'
@@ -65,6 +66,7 @@ const OrderItemSchema = new Schema<OrderItem>(
 
 const OrderSchema = new Schema<IOrder>(
     {
+        number: { type: Number, required: true },
         items: [OrderItemSchema],
         totalPrice: { type: Number, required: true },
         status: {
