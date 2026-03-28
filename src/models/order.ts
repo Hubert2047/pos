@@ -2,17 +2,19 @@ import mongoose, { Schema, Document } from 'mongoose'
 
 export const PAYMENT_METHODS = ['cash', 'uber', 'linepay', 'bank', 'foodpanda'] as const
 export interface OrderItemAddon {
+    id: string
     name: string
     priceExtra: number
     amount: number
 }
 interface OrderItem {
-    itemId: mongoose.Types.ObjectId
+    id: mongoose.Types.ObjectId
+    itemId: string
     name: string
     quantity: number
     basePrice: number
     variant: string
-    addon: string[]
+    addons: OrderItemAddon[]
     noteOptions: string[]
     note: string
 }
@@ -22,6 +24,10 @@ export interface OrderDiscount {
     amount: number
     type: 'percent' | 'value'
 }
+interface Customer {
+    name: string
+    phone: string
+}
 export interface IOrder extends Document {
     number: number
     items: OrderItem[]
@@ -30,9 +36,18 @@ export interface IOrder extends Document {
     type: 'dine_in' | 'takeaway'
     discount?: OrderDiscount
     paymentMethod: string
+    customer: Customer | null
 }
+const CustomerSchema = new Schema<Customer>(
+    {
+        name: String,
+        phone: String,
+    },
+    { _id: false },
+)
 const OrderItemAddonSchema = new Schema<OrderItemAddon>(
     {
+        id: String,
         name: String,
         priceExtra: Number,
         amount: Number,
@@ -52,12 +67,13 @@ const OrderDiscountSchema = new Schema<OrderDiscount>(
 )
 const OrderItemSchema = new Schema<OrderItem>(
     {
-        itemId: Schema.Types.ObjectId,
+        id: Schema.Types.ObjectId,
+        itemId: String,
         name: String,
         quantity: { type: Number, default: 1 },
         basePrice: Number,
         variant: String,
-        addon: [OrderItemAddonSchema],
+        addons: [OrderItemAddonSchema],
         noteOptions: [String],
         note: String,
     },
@@ -87,6 +103,10 @@ const OrderSchema = new Schema<IOrder>(
             type: String,
             enum: PAYMENT_METHODS,
             required: true,
+        },
+        customer: {
+            type: CustomerSchema,
+            default: null,
         },
     },
     { timestamps: true },

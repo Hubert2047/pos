@@ -1,13 +1,17 @@
 import type { Request, Response } from 'express'
-import Order, { type OrderItemAddon } from '../models/order.js'
-const calculateTotal = (items: any[]) => {
-    return items.reduce((total, item) => {
-        const modifierTotal =
-            item.modifiers?.reduce((sum: number, mod: OrderItemAddon) => sum + (mod.priceExtra || 0) * mod.amount, 0) ||
-            0
-
-        return total + (item.base_price + modifierTotal) * item.quantity
+import Order, { type IOrder, type OrderItemAddon } from '../models/order.js'
+const calculateTotal = (order: IOrder) => {
+    const total = order.items.reduce((sum, i) => {
+        const item = i.basePrice * i.quantity
+        const addon = i.addons.reduce((sum, a) => sum + a.amount * a.priceExtra, 0)
+        return sum + item + addon
     }, 0)
+    if (!order.discount) return total
+    if (order.discount.type === 'percent') {
+        const percent = order.discount.amount / 100
+        return total * (1 - percent)
+    }
+    return total - order.discount.amount
 }
 
 export const getNextOrderNumber = async (req: Request, res: Response) => {
@@ -123,50 +127,109 @@ export const getTodaySales = async (req: Request, res: Response) => {
     }
 }
 
+const getNextNumber = async () => {
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    const todayEnd = new Date()
+    todayEnd.setHours(23, 59, 59, 999)
+    const lastOrder = await Order.findOne({
+        createdAt: { $gte: todayStart, $lte: todayEnd },
+    }).sort({ number: -1 })
+    return lastOrder ? lastOrder.number + 1 : 1
+}
+
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const { items } = req.body
+        const order = req.body
 
-        if (!items || items.length === 0) {
-            return res.status(400).json({
+        if (!order.items || order.items.length === 0) {
+            return res.status(400).json({ success: false, message: 'Items is required' })
+        }
+
+        if (order.checkoutPending && order._id) {
+            const updated = await Order.findByIdAndUpdate(
+                order._id,
+                { status: 'paid', paymentMethod: order.paymentMethod },
+                { new: true }
+            )
+            if (!updated) {
+                return res.status(404).json({ success: false, message: 'Order not found' })
+            }
+            const nextNumber = await getNextNumber()
+            return res.status(200).json({ success: true, data: nextNumber })
+        }
+
+        const normalizedItems = order.items.map((item: any) => ({
+            id: item.id,
+            itemId: item.itemId,
+            name: item.name,
+            quantity: item.quantity || 1,
+            basePrice: item.basePrice,
+            variant: item.variant,
+            addons: item.addons,
+            noteOptions: item.noteOptions || [],
+            note: item.note,
+        }))
+
+        const totalPrice = calculateTotal(order)
+
+        const newOrder = new Order({
+            number: order.number,
+            items: normalizedItems,
+            totalPrice,
+            status: order.status,
+            type: order.type,
+            paymentMethod: order.paymentMethod,
+            discount: order.discount,
+            customer: order.customer,
+        })
+
+        await newOrder.save()
+
+        const nextNumber = await getNextNumber()
+        return res.status(201).json({ success: true, data: nextNumber })
+    } catch (error) {
+        console.error('Error creating order:', error)
+        res.status(500).json({ success: false, message: 'Error creating order', error })
+    }
+}
+export const cancelOrder = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params
+
+        const order = await Order.findById(id)
+
+        if (!order) {
+            return res.status(404).json({
                 success: false,
-                message: 'Items is required',
+                message: 'Order not found',
             })
         }
 
-        const normalizedItems = items.map((item: any) => {
-            const note = item.note_options?.join(', ') || ''
+        if (order.status === 'cancelled') {
+            return res.status(400).json({
+                success: false,
+                message: 'Order is already cancelled',
+            })
+        }
 
-            return {
-                item_id: item.item_id,
-                name: item.name,
-                quantity: item.quantity || 1,
-                base_price: item.base_price,
+        // if (order.status === 'paid') {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'Cannot cancel a paid order',
+        //     })
+        // }
 
-                modifiers: item.modifiers || [],
-                note_options: item.note_options || [],
-                note,
-            }
-        })
+        const updated = await Order.findByIdAndUpdate(id, { status: 'cancelled' }, { new: true })
 
-        const total_price = calculateTotal(normalizedItems)
-
-        const order = new Order({
-            items: normalizedItems,
-            total_price,
-            status: 'pending',
-        })
-
-        await order.save()
-
-        res.status(201).json({
+        res.json({
             success: true,
-            data: order,
+            data: updated,
         })
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Error creating order',
+            message: 'Error cancelling order',
             error,
         })
     }
@@ -174,18 +237,20 @@ export const createOrder = async (req: Request, res: Response) => {
 
 export const getOrders = async (req: Request, res: Response) => {
     try {
-        const orders = await Order.find().sort({ createdAt: -1 })
+        const { days } = req.query
+        const filter: any = {}
 
-        res.json({
-            success: true,
-            data: orders,
-        })
+        if (days) {
+            const start = new Date()
+            start.setDate(start.getDate() - Number(days))
+            start.setHours(0, 0, 0, 0)
+            filter.createdAt = { $gte: start }
+        }
+
+        const orders = await Order.find(filter).sort({ createdAt: -1 })
+        res.json({ success: true, data: orders })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching orders',
-            error,
-        })
+        res.status(500).json({ success: false, message: 'Error fetching orders', error })
     }
 }
 

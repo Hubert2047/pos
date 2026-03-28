@@ -4,7 +4,8 @@ import {
   getOrders,
   getOrderById,
   updateOrderStatus,
-  getNextOrderNumber
+  getNextOrderNumber,
+  cancelOrder
 } from "../controllers/order.js";
 
 const router = Router();
@@ -14,5 +15,6 @@ router.get("/", getOrders);
 router.get("/next-order-number", getNextOrderNumber);
 router.get("/:id", getOrderById);
 router.patch("/:id/status", updateOrderStatus);
+router.patch("/:id/cancel", cancelOrder)
 
 export default router;
