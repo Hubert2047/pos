@@ -3,21 +3,25 @@ import mongoose, { Schema, Document } from 'mongoose'
 export interface IItem extends Document {
     name: string
     variants: string[] | null
-    basePrice: number
+    price: Map<string, number>
     categoryId: mongoose.Types.ObjectId
     addons: mongoose.Types.ObjectId[]
     noteOptions: string[]
     active: boolean
 }
 
-
 const ItemSchema = new Schema<IItem>(
     {
         name: { type: String, required: true },
-        basePrice: { type: Number, required: true },
         variants: {
-          type: [String],
-          default: [],
+            type: [String],
+            default: [],
+        },
+        price: {
+            type: Map,
+            of: Number,
+            required: true,
+            default: {},
         },
         addons: [{ type: Schema.Types.ObjectId, ref: 'Addon' }],
         categoryId: {
@@ -26,7 +30,7 @@ const ItemSchema = new Schema<IItem>(
             required: true,
         },
         noteOptions: [String],
-        active: { type: Boolean, required: false, default: true },
+        active: { type: Boolean, default: true },
     },
     { timestamps: true },
 )

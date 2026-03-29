@@ -15,17 +15,18 @@ export const createExpense = async (req: Request, res: Response) => {
 export const getExpenses = async (req: Request, res: Response) => {
     try {
         const { date } = req.query
-        const filter: any = {}
-        if (date) {
-            const d = new Date(date as string)
-            d.setHours(0, 0, 0, 0)
-            const dNext = new Date(d)
-            dNext.setDate(dNext.getDate() + 1)
-            filter.date = { $gte: d, $lt: dNext }
-        }
+        const targetDate = date ? new Date(date as string) : new Date()
+        const start = new Date(targetDate)
+        start.setHours(0, 0, 0, 0)
+
+        const end = new Date(targetDate)
+        end.setHours(23, 59, 59, 999)
+
+        const filter = { createdAt: { $gte: start, $lte: end } }
         const expenses = await Expense.find(filter).sort({ date: 1 })
         res.json({ success: true, data: expenses })
     } catch (error) {
+        console.error(error)
         res.status(500).json({ success: false, message: 'Error fetching expenses', error })
     }
 }
@@ -55,31 +56,44 @@ export const deleteExpense = async (req: Request, res: Response) => {
         })
     }
 }
+
 export const updateExpense = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
-        const { name, price, note } = req.body
-
-        const expense = await Expense.findByIdAndUpdate(
-            id,
-            { name, price, note },
-            { new: true, runValidators: true }, 
-        )
-
-        if (!expense) {
-            return res.status(404).json({
+        const data = req.body
+        console.log("id",id)
+        if (!id) {
+            return res.status(400).json({
                 success: false,
-                message: 'Expense not found',
+                message: 'Thiếu id',
             })
         }
 
-        res.json({
+        const updated = await Expense.findByIdAndUpdate(
+            id,
+            {
+                ...data,
+                price: Number(data.price), 
+            },
+            {
+                new: true,
+                runValidators: true,
+            }
+        )
+
+        if (!updated) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy expense',
+            })
+        }
+
+        return res.json({
             success: true,
-            message: 'Expense updated successfully',
-            data: expense,
+            data: updated,
         })
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'Error updating expense',
             error,

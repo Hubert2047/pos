@@ -33,7 +33,7 @@ export interface IOrder extends Document {
     items: OrderItem[]
     totalPrice: number
     status: 'pending' | 'paid' | 'cancelled'
-    type: 'dine_in' | 'takeaway'
+    type: 'dine_in' | 'takeaway' | 'uber' | 'foodpanda'
     discount?: OrderDiscount
     paymentMethod: string
     customer: Customer | null
@@ -92,7 +92,7 @@ const OrderSchema = new Schema<IOrder>(
         },
         type: {
             type: String,
-            enum: ['dine_in', 'takeaway'],
+            enum: ['dine_in', 'takeaway', 'uber', 'foodpanda'],
             default: 'dine_in',
         },
         discount: {

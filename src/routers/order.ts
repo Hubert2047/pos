@@ -5,7 +5,8 @@ import {
   getOrderById,
   updateOrderStatus,
   getNextOrderNumber,
-  cancelOrder
+  cancelOrder,
+  getSalesByPaymentMethod
 } from "../controllers/order.js";
 
 const router = Router();
@@ -13,6 +14,7 @@ const router = Router();
 router.post("/", createOrder);
 router.get("/", getOrders);
 router.get("/next-order-number", getNextOrderNumber);
+router.get("/sales-by-payment", getSalesByPaymentMethod);
 router.get("/:id", getOrderById);
 router.patch("/:id/status", updateOrderStatus);
 router.patch("/:id/cancel", cancelOrder)
