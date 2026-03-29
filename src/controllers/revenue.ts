@@ -1,18 +1,18 @@
 import type { Request, Response } from 'express'
-import Expense from '../models/expense.js'
+import Revenue from '../models/revenue.js'
 
-export const createExpense = async (req: Request, res: Response) => {
+export const createRevenue = async (req: Request, res: Response) => {
     try {
         const { name, price, note } = req.body
-        const expense = new Expense({ name, price, note })
-        await expense.save()
-        res.status(201).json({ success: true, data: expense })
+        const revenue = new Revenue({ name, price, note })
+        await revenue.save()
+        res.status(201).json({ success: true, data: revenue })
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error creating expense', error })
+        res.status(500).json({ success: false, message: 'Error creating Revenue', error })
     }
 }
 
-export const getExpenses = async (req: Request, res: Response) => {
+export const getRevenues = async (req: Request, res: Response) => {
     try {
         const { date } = req.query
         const targetDate = date ? new Date(date as string) : new Date()
@@ -23,41 +23,41 @@ export const getExpenses = async (req: Request, res: Response) => {
         end.setHours(23, 59, 59, 999)
 
         const filter = { createdAt: { $gte: start, $lte: end } }
-        const expenses = await Expense.find(filter).sort({ createdAt: -1 })
-        res.json({ success: true, data: expenses })
+        const revenues = await Revenue.find(filter).sort({ createdAt: -1 })
+        res.json({ success: true, data: revenues })
     } catch (error) {
         console.error(error)
-        res.status(500).json({ success: false, message: 'Error fetching expenses', error })
+        res.status(500).json({ success: false, message: 'Error fetching Revenue', error })
     }
 }
-export const deleteExpense = async (req: Request, res: Response) => {
+export const deleteRevenue = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
 
-        const expense = await Expense.findByIdAndDelete(id)
+        const revenue = await Revenue.findByIdAndDelete(id)
 
-        if (!expense) {
+        if (!revenue) {
             return res.status(404).json({
                 success: false,
-                message: 'Expense not found',
+                message: 'Revenue not found',
             })
         }
 
         res.json({
             success: true,
-            message: 'Expense deleted successfully',
-            data: expense,
+            message: 'Revenue deleted successfully',
+            data: revenue,
         })
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Error deleting expense',
+            message: 'Error deleting Revenue',
             error,
         })
     }
 }
 
-export const updateExpense = async (req: Request, res: Response) => {
+export const updateRevenue = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
         const data = req.body
@@ -69,7 +69,7 @@ export const updateExpense = async (req: Request, res: Response) => {
             })
         }
 
-        const updated = await Expense.findByIdAndUpdate(
+        const updated = await Revenue.findByIdAndUpdate(
             id,
             {
                 ...data,
@@ -84,7 +84,7 @@ export const updateExpense = async (req: Request, res: Response) => {
         if (!updated) {
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy expense',
+                message: 'Không tìm thấy Revenue',
             })
         }
 
@@ -95,7 +95,7 @@ export const updateExpense = async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Error updating expense',
+            message: 'Error updating Revenue',
             error,
         })
     }
