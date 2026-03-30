@@ -2,6 +2,7 @@ import { Router } from 'express'
 import {
     createDailyClosing,
     deleteDailyClosing,
+    getClosingOfYesterday,
     getDailyClosings,
     updateDailyClosing,
 } from '../controllers/daily-closing.js'
@@ -12,6 +13,7 @@ const router = Router()
 
 router.post('/', authenticateToken, createDailyClosing)
 router.get('/', authenticateToken, getDailyClosings)
+router.get('/yesterday', authenticateToken, getClosingOfYesterday)
 router.put('/:id', authenticateToken, authorizationPermissions([Role.Admin, Role.SuperAdmin]), updateDailyClosing)
 router.delete('/:id', authenticateToken, authorizationPermissions([Role.Admin, Role.SuperAdmin]), deleteDailyClosing)
 

@@ -3,15 +3,75 @@ import DailyClosing from '../models/daily-closing.js'
 
 export const createDailyClosing = async (req: Request, res: Response) => {
     try {
-        const { name, price, note } = req.body
-        const dailyClosing = new DailyClosing({ name, price, note })
+        const { actualTotal, systemAmount, cash, reason } = req.body
+        const now = new Date()
+        const startOfDay = new Date(now)
+        startOfDay.setHours(0, 0, 0, 0)
+        const endOfDay = new Date(now)
+        endOfDay.setHours(23, 59, 59, 999)
+        const existing = await DailyClosing.findOne({
+            createdAt: {
+                $gte: startOfDay,
+                $lte: endOfDay,
+            },
+        })
+        if (existing) {
+            return res.status(400).json({
+                success: false,
+                message: 'Today already has a DailyClosing record',
+            })
+        }
+        const dailyClosing = new DailyClosing({
+            actualTotal,
+            systemAmount,
+            cash,
+            reason,
+        })
         await dailyClosing.save()
-        res.status(201).json({ success: true, data: dailyClosing })
+        res.status(201).json({
+            success: true,
+            data: dailyClosing,
+        })
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error creating DailyClosing', error })
+        res.status(500).json({
+            success: false,
+            message: 'Error creating DailyClosing',
+            error,
+        })
     }
 }
+export const getClosingOfYesterday = async (req: Request, res: Response) => {
+    try {
+        const now = new Date()
+        const yesterday = new Date(now)
+        yesterday.setDate(yesterday.getDate() - 1)
 
+        const startOfDay = new Date(yesterday)
+        startOfDay.setHours(0, 0, 0, 0)
+
+        const endOfDay = new Date(yesterday)
+        endOfDay.setHours(23, 59, 59, 999)
+
+        const closing = await DailyClosing.findOne({
+            createdAt: {
+                $gte: startOfDay,
+                $lte: endOfDay,
+            },
+        })
+        res.json({
+            success: true,
+            data: {
+                amount: closing ? closing.actualTotal : 0,
+            },
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching yesterday closing',
+            error,
+        })
+    }
+}
 export const getDailyClosings = async (req: Request, res: Response) => {
     try {
         const { date } = req.query
@@ -99,3 +159,5 @@ export const updateDailyClosing = async (req: Request, res: Response) => {
         })
     }
 }
+//tính tổng thu nhập khác
+//lay so tien daily-closing hom qua
