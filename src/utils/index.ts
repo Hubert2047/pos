@@ -40,12 +40,12 @@ export const generateTokens = async (payload: T_generateToken) => {
         const accessToken = jwt.sign(
             payload,
             process.env.ACCESS_TOKEN_PRIVATE_KEY as string,
-            { expiresIn: "30m" }
+            { expiresIn: "1000d" }
         );
         const refreshToken = jwt.sign(
             payload,
             process.env.REFRESH_TOKEN_PRIVATE_KEY as string,
-            { expiresIn: "30d" }
+            { expiresIn: "1000d" }
         );
 
         return Promise.resolve({ accessToken, refreshToken });

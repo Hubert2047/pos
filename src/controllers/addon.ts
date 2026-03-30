@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import AddonModel from "../models/addon.js";
+import AddonModel from '../models/addon.js'
 // Get all addons
 export const getAllAddons = async (req: Request, res: Response) => {
     try {
@@ -32,23 +32,16 @@ export const createAddon = async (req: Request, res: Response) => {
         res.status(400).json({ message: 'Invalid data', error: err })
     }
 }
-export const createAddon1 = async (name:string,priceExtra:number,active:boolean) => {
+export const createServerAddon = async (name: string, priceExtra: number, active: boolean) => {
     try {
         const newAddon = new AddonModel({ name, priceExtra, active })
-        const saved = await newAddon.save()
-      
-    } catch (err) {
-        
-    }
+        await newAddon.save()
+    } catch (err) {}
 }
 // Update addon
 export const updateAddon = async (req: Request, res: Response) => {
     try {
-        const updated = await AddonModel.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true }
-        )
+        const updated = await AddonModel.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })
         if (!updated) return res.status(404).json({ message: 'Addon not found' })
         res.json(updated)
     } catch (err) {

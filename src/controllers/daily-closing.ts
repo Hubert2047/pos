@@ -135,8 +135,8 @@ export const updateDailyClosing = async (req: Request, res: Response) => {
                 price: Number(data.price),
             },
             {
-                new: true,
                 runValidators: true,
+                returnDocument: 'after',
             },
         )
 

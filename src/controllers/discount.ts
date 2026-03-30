@@ -107,7 +107,7 @@ export const updateDiscount = async (req: Request, res: Response) => {
         }
 
         const discount = await Discount.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true,
         })
 

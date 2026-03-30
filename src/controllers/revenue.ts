@@ -75,7 +75,7 @@ export const updateRevenue = async (req: Request, res: Response) => {
                 price: Number(data.price),
             },
             {
-                new: true,
+                returnDocument: 'after',
                 runValidators: true,
             },
         )

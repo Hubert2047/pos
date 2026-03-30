@@ -16,11 +16,14 @@ import employee from './routers/employee.js'
 import refreshTokenRoutes from './routers/refresh-token.js'
 import auth from './routers/auth.js'
 import shiftAttendance from './routers/shift-attendance.js'
+import cookieParser from 'cookie-parser'
+
 dotenv.config()
 
 const app: Application = express()
 ;(async () => {
     await connectDB()
+    app.use(cookieParser())
     const port = process.env.SERVER_BACKUP_PORT || 8080
     app.use(
         cors({

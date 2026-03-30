@@ -6,7 +6,8 @@ import {
   updateOrderStatus,
   getNextOrderNumber,
   cancelOrder,
-  getSalesByPaymentMethod
+  getSalesByPaymentMethod,
+  updateOrderPayment
 } from "../controllers/order.js";
 import authenticateToken from "../middlewares/auth.js";
 
@@ -16,6 +17,7 @@ router.post("/",authenticateToken, createOrder);
 router.get("/", authenticateToken, getOrders);
 router.get("/next-order-number", getNextOrderNumber);
 router.get("/sales-by-payment", authenticateToken, getSalesByPaymentMethod);
+router.put("/payment/:id", authenticateToken, updateOrderPayment);   
 router.get("/:id", authenticateToken, getOrderById);
 router.patch("/:id/status", authenticateToken, updateOrderStatus);
 router.patch("/:id/cancel", authenticateToken, cancelOrder);

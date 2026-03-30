@@ -96,7 +96,7 @@ export const createItem1 = async (data: {
 export const updateItem = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
-        const updated = await Item.findByIdAndUpdate(id, req.body, { new: true })
+        const updated = await Item.findByIdAndUpdate(id, req.body, {  returnDocument: 'after' })
         res.json({ success: true, data: updated })
     } catch (error) {
         res.status(400).json({ success: false, message: 'Error updating item', error })

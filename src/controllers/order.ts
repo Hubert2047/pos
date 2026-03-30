@@ -150,7 +150,7 @@ export const createOrder = async (req: Request, res: Response) => {
             const updated = await Order.findByIdAndUpdate(
                 order._id,
                 { status: 'paid', paymentMethod: order.paymentMethod },
-                { new: true }
+                {  returnDocument: 'after'  },
             )
             if (!updated) {
                 return res.status(404).json({ success: false, message: 'Order not found' })
@@ -213,14 +213,7 @@ export const cancelOrder = async (req: Request, res: Response) => {
             })
         }
 
-        // if (order.status === 'paid') {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: 'Cannot cancel a paid order',
-        //     })
-        // }
-
-        const updated = await Order.findByIdAndUpdate(id, { status: 'cancelled' }, { new: true })
+        const updated = await Order.findByIdAndUpdate(id, { status: 'cancelled' }, { returnDocument: 'after' })
 
         res.json({
             success: true,
@@ -285,7 +278,25 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         const { id } = req.params
         const { status } = req.body
 
-        const updated = await Order.findByIdAndUpdate(id, { status }, { new: true })
+        const updated = await Order.findByIdAndUpdate(id, { status }, { returnDocument: 'after' })
+
+        res.json({
+            success: true,
+            data: updated,
+        })
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: 'Error updating order',
+            error,
+        })
+    }
+}
+export const updateOrderPayment = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params
+        const { paymentMethod } = req.body
+        const updated = await Order.findByIdAndUpdate(id, { paymentMethod }, { returnDocument: 'after' })
 
         res.json({
             success: true,

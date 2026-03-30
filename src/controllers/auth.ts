@@ -8,11 +8,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const { account, password } = req.body
         if (!account || !password) {
-           return res.status(200).json({ error: false, message: 'Account and password are required' })
+            return res.status(200).json({ error: false, message: 'Account and password are required' })
         }
         const user = await User.findOne({ account })
-        const isValid =
-            user && (await bcrypt.compare(password, user.password))
+        const isValid = user && (await bcrypt.compare(password, user.password))
         if (!isValid) {
             return res.status(200).json({ error: false, message: 'Invalid account or password' })
         }
@@ -25,7 +24,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         await UserToken.findOneAndUpdate(
             { account: payload.account },
             { account: payload.account, token: refreshToken },
-            { upsert: true, new: true },
+            { returnDocument: 'after' },
         )
 
         await User.findOneAndUpdate(
@@ -39,7 +38,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         )
         res.cookie('jwt', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', 
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 1000 * 60 * 60 * 24 * 365,
         })
@@ -92,7 +91,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
         )
     }
 }
-export const register = async (account: string, password: string, role: Role) => {
+export const serverRegister = async (account: string, password: string, role: Role) => {
     try {
         const user = await User.findOne({
             account,

@@ -37,7 +37,7 @@ export const createCategory = async (req: Request, res: Response) => {
         res.status(400).json({ success: false, message: 'Error creating category', error })
     }
 }
-export const createCategory1 = async (name: string) => {
+export const createServerCategory = async (name: string) => {
     try {
         const existing = await Category.findOne({ name })
         if (existing) return
@@ -49,7 +49,7 @@ export const updateCategory = async (req: any, res: any) => {
     try {
         const { id } = req.params
         const { name } = req.body
-        const updated = await Category.findByIdAndUpdate(id, { name }, { new: true })
+        const updated = await Category.findByIdAndUpdate(id, { name }, { returnDocument: 'after' })
         res.json({ success: true, data: updated })
     } catch (error) {
         res.status(400).json({ success: false, message: 'Error updating category', error })

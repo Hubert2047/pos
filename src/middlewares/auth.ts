@@ -27,12 +27,6 @@ export default async function authenticateToken(req: any, res: Response, next: N
         req.user = user
         next()
     } catch (error: any) {
-        return next(
-            customError({
-                msg: "Invalid token",
-                status: 'failed',
-                statusCode: 401,
-            })
-        )
+        return res.status(401).json({ error: true, message: 'Invalid token' })
     }
 }
