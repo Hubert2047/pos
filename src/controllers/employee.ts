@@ -3,8 +3,8 @@ import Employee from '../models/employee.js'
 
 export const createEmployee = async (req: Request, res: Response) => {
     try {
-        const { name, price, note } = req.body
-        const employee = new Employee({ name, price, note })
+        const { name, numberId, note } = req.body
+        const employee = new Employee({ name, numberId, note })
         await employee.save()
         res.status(201).json({ success: true, data: employee })
     } catch (error) {

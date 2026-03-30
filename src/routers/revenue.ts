@@ -1,11 +1,12 @@
-import { Router } from "express";
-import { createRevenue, deleteRevenue, getRevenues, updateRevenue } from "../controllers/revenue.js";
+import { Router } from 'express'
+import { createRevenue, deleteRevenue, getRevenues, updateRevenue } from '../controllers/revenue.js'
+import authenticateToken from '../middlewares/auth.js'
 
-const router = Router();
+const router = Router()
 
-router.post("/", createRevenue);
-router.get("/", getRevenues);
-router.put("/:id", updateRevenue);     
-router.delete("/:id", deleteRevenue); 
+router.post('/', authenticateToken, createRevenue)
+router.get('/', authenticateToken, getRevenues)
+router.put('/:id', authenticateToken, updateRevenue)
+router.delete('/:id', authenticateToken, deleteRevenue)
 
-export default router;
+export default router

@@ -8,15 +8,16 @@ import {
   cancelOrder,
   getSalesByPaymentMethod
 } from "../controllers/order.js";
+import authenticateToken from "../middlewares/auth.js";
 
 const router = Router();
 
-router.post("/", createOrder);
-router.get("/", getOrders);
+router.post("/",authenticateToken, createOrder);
+router.get("/", authenticateToken, getOrders);
 router.get("/next-order-number", getNextOrderNumber);
-router.get("/sales-by-payment", getSalesByPaymentMethod);
-router.get("/:id", getOrderById);
-router.patch("/:id/status", updateOrderStatus);
-router.patch("/:id/cancel", cancelOrder)
+router.get("/sales-by-payment", authenticateToken, getSalesByPaymentMethod);
+router.get("/:id", authenticateToken, getOrderById);
+router.patch("/:id/status", authenticateToken, updateOrderStatus);
+router.patch("/:id/cancel", authenticateToken, cancelOrder);
 
 export default router;

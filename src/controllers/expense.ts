@@ -61,7 +61,6 @@ export const updateExpense = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
         const data = req.body
-        console.log('id', id)
         if (!id) {
             return res.status(400).json({
                 success: false,

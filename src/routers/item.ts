@@ -6,13 +6,13 @@ import {
   updateItem,
   deleteItem
 } from "../controllers/item.js";
+import authenticateToken from "../middlewares/auth.js";
 
 const router = Router();
 
-router.get("/", getItems);        
-router.get("/:id", getItemById);   
-router.post("/", createItem);       
-router.put("/:id", updateItem);     
-router.delete("/:id", deleteItem); 
-
+router.get("/",authenticateToken, getItems);        
+router.get("/:id", authenticateToken, getItemById);   
+router.post("/", authenticateToken, createItem);       
+router.put("/:id", authenticateToken, updateItem);     
+router.delete("/:id", authenticateToken, deleteItem); 
 export default router;

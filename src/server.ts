@@ -13,15 +13,23 @@ import addon from './routers/addon.js'
 import revenue from './routers/revenue.js'
 import dailyClosing from './routers/daily-closing.js'
 import employee from './routers/employee.js'
+import refreshTokenRoutes from './routers/refresh-token.js'
+import auth from './routers/auth.js'
 dotenv.config()
 
 const app: Application = express()
 ;(async () => {
     await connectDB()
     const port = process.env.SERVER_BACKUP_PORT || 8080
-    app.use(cors())
+    app.use(
+        cors({
+            credentials: true,
+        }),
+    )
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(express.json())
+    app.use('/api/refresh-token', refreshTokenRoutes)
+    app.use('/api/auth', auth)
     app.use('/api/items', item)
     app.use('/api/orders', order)
     app.use('/api/categories', category)

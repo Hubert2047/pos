@@ -1,11 +1,12 @@
-import { Router } from "express";
-import { createExpense, deleteExpense, getExpenses, updateExpense } from "../controllers/expense.js";
+import { Router } from 'express'
+import { createExpense, deleteExpense, getExpenses, updateExpense } from '../controllers/expense.js'
+import authenticateToken from '../middlewares/auth.js'
 
-const router = Router();
+const router = Router()
 
-router.post("/", createExpense);
-router.get("/", getExpenses);
-router.put("/:id", updateExpense);     
-router.delete("/:id", deleteExpense); 
+router.post('/', authenticateToken, createExpense)
+router.get('/', authenticateToken, getExpenses)
+router.put('/:id', authenticateToken, updateExpense)
+router.delete('/:id', authenticateToken, deleteExpense)
 
-export default router;
+export default router
