@@ -1,18 +1,18 @@
 import type { Request, Response } from 'express'
-import Revenue from '../models/revenue.js'
+import DailyClosing from '../models/daily-closing.js'
 
-export const createRevenue = async (req: Request, res: Response) => {
+export const createDailyClosing = async (req: Request, res: Response) => {
     try {
         const { name, price, note } = req.body
-        const revenue = new Revenue({ name, price, note })
-        await revenue.save()
-        res.status(201).json({ success: true, data: revenue })
+        const dailyClosing = new DailyClosing({ name, price, note })
+        await dailyClosing.save()
+        res.status(201).json({ success: true, data: dailyClosing })
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error creating Revenue', error })
+        res.status(500).json({ success: false, message: 'Error creating DailyClosing', error })
     }
 }
 
-export const getRevenues = async (req: Request, res: Response) => {
+export const getDailyClosings = async (req: Request, res: Response) => {
     try {
         const { date } = req.query
         const targetDate = date ? new Date(date as string) : new Date()
@@ -23,41 +23,41 @@ export const getRevenues = async (req: Request, res: Response) => {
         end.setHours(23, 59, 59, 999)
 
         const filter = { createdAt: { $gte: start, $lte: end } }
-        const revenues = await Revenue.find(filter).sort({ createdAt: -1 })
-        res.json({ success: true, data: revenues })
+        const dailyClosings = await DailyClosing.find(filter).sort({ createdAt: -1 })
+        res.json({ success: true, data: dailyClosings })
     } catch (error) {
         console.error(error)
-        res.status(500).json({ success: false, message: 'Error fetching Revenue', error })
+        res.status(500).json({ success: false, message: 'Error fetching DailyClosing', error })
     }
 }
-export const deleteRevenue = async (req: Request, res: Response) => {
+export const deleteDailyClosing = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
 
-        const revenue = await Revenue.findByIdAndDelete(id)
+        const dailyClosing = await DailyClosing.findByIdAndDelete(id)
 
-        if (!revenue) {
+        if (!dailyClosing) {
             return res.status(404).json({
                 success: false,
-                message: 'Revenue not found',
+                message: 'DailyClosing not found',
             })
         }
 
         res.json({
             success: true,
-            message: 'Revenue deleted successfully',
-            data: revenue,
+            message: 'DailyClosing deleted successfully',
+            data: dailyClosing,
         })
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Error deleting Revenue',
+            message: 'Error deleting DailyClosing',
             error,
         })
     }
 }
 
-export const updateRevenue = async (req: Request, res: Response) => {
+export const updateDailyClosing = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
         const data = req.body
@@ -68,7 +68,7 @@ export const updateRevenue = async (req: Request, res: Response) => {
             })
         }
 
-        const updated = await Revenue.findByIdAndUpdate(
+        const updated = await DailyClosing.findByIdAndUpdate(
             id,
             {
                 ...data,
@@ -83,7 +83,7 @@ export const updateRevenue = async (req: Request, res: Response) => {
         if (!updated) {
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy Revenue',
+                message: 'Không tìm thấy DailyClosing',
             })
         }
 
@@ -94,7 +94,7 @@ export const updateRevenue = async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Error updating Revenue',
+            message: 'Error updating DailyClosing',
             error,
         })
     }

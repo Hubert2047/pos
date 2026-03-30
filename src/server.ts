@@ -11,6 +11,7 @@ import expense from './routers/expense.js'
 import discount from './routers/discount.js'
 import addon from './routers/addon.js'
 import revenue from './routers/revenue.js'
+import dailyClosing from './routers/daily-closing.js'
 dotenv.config()
 
 const app: Application = express()
@@ -26,7 +27,8 @@ const app: Application = express()
     app.use('/api/expenses', expense)
     app.use('/api/discounts', discount)
     app.use('/api/addons', addon)
-    app.use('/api/revenues', revenue)
+    app.use('/api/other-revenues', revenue)
+    app.use('/api/daily-closing', dailyClosing)
     app.listen(port, () => {
         console.log(`Server is Fire at http://localhost:${port}`)
     })
