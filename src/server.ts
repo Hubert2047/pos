@@ -15,6 +15,7 @@ import dailyClosing from './routers/daily-closing.js'
 import employee from './routers/employee.js'
 import refreshTokenRoutes from './routers/refresh-token.js'
 import auth from './routers/auth.js'
+import shiftAttendance from './routers/shift-attendance.js'
 dotenv.config()
 
 const app: Application = express()
@@ -39,6 +40,7 @@ const app: Application = express()
     app.use('/api/other-revenues', revenue)
     app.use('/api/daily-closing', dailyClosing)
     app.use('/api/employee', employee)
+    app.use('/api/shift-attendance', shiftAttendance)
     app.listen(port, () => {
         console.log(`Server is Fire at http://localhost:${port}`)
     })
