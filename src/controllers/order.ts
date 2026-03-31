@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
-import Order, { type IOrder, type OrderItemAddon } from '../models/order.js'
+import Order, { type IOrder } from '../models/order.js'
+import { getFromDayUntilNow, getFullDay } from '../utils/index.js'
 const calculateTotal = (order: IOrder) => {
     const total = order.items.reduce((sum, i) => {
         const item = i.basePrice * i.quantity
@@ -16,59 +17,16 @@ const calculateTotal = (order: IOrder) => {
 
 export const getNextOrderNumber = async (req: Request, res: Response) => {
     try {
-        const todayStart = new Date()
-        todayStart.setHours(0, 0, 0, 0)
-
-        const todayEnd = new Date()
-        todayEnd.setHours(23, 59, 59, 999)
-
-        const lastOrder = await Order.findOne({
-            date: { $gte: todayStart, $lte: todayEnd },
-        }).sort({ number: -1 })
-
-        const nextNumber = lastOrder ? lastOrder.number + 1 : 1
-
+        const nextNumber = await getNextNumber()
         res.json({ success: true, nextNumber })
     } catch (err) {
         res.status(500).json({ success: false, message: 'Failed to get next number', error: err })
     }
 }
-export const getCashOrders = async (req: Request, res: Response) => {
-    try {
-        const start = new Date()
-        start.setHours(0, 0, 0, 0)
-        const end = new Date()
-        end.setHours(23, 59, 59, 999)
 
-        const cashOrders = await Order.find({
-            createdAt: { $gte: start, $lte: end },
-            status: 'paid',
-            paymentMethod: 'cash',
-        })
-
-        const totalCash = cashOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0)
-
-        res.json({
-            success: true,
-            totalCash,
-            count: cashOrders.length,
-            data: cashOrders,
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching cash orders',
-            error,
-        })
-    }
-}
 export const getSalesByPaymentMethod = async (req: Request, res: Response) => {
     try {
-        const start = new Date()
-        start.setHours(0, 0, 0, 0)
-        const end = new Date()
-        end.setHours(23, 59, 59, 999)
-
+        const { start, end } = getFullDay(0)
         const result = await Order.aggregate([
             {
                 $match: {
@@ -95,6 +53,7 @@ export const getSalesByPaymentMethod = async (req: Request, res: Response) => {
             data: salesByMethod,
         })
     } catch (error) {
+        console.error(error)
         res.status(500).json({
             success: false,
             message: 'Error fetching sales by payment method',
@@ -102,39 +61,13 @@ export const getSalesByPaymentMethod = async (req: Request, res: Response) => {
         })
     }
 }
-export const getTodaySales = async (req: Request, res: Response) => {
-    try {
-        const start = new Date()
-        start.setHours(0, 0, 0, 0)
-        const end = new Date()
-        end.setHours(23, 59, 59, 999)
-        const orders = await Order.find({
-            createdAt: { $gte: start, $lte: end },
-            status: 'paid',
-        })
-        const totalSales = orders.reduce((sum, o) => sum + (o.totalPrice || 0), 0)
-        res.json({
-            success: true,
-            totalSales,
-            count: orders.length,
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Error calculating today's sales",
-            error,
-        })
-    }
-}
 
-const getNextNumber = async () => {
-    const todayStart = new Date()
-    todayStart.setHours(0, 0, 0, 0)
-    const todayEnd = new Date()
-    todayEnd.setHours(23, 59, 59, 999)
+export const getNextNumber = async () => {
+    const { start, end } = getFullDay(0)
     const lastOrder = await Order.findOne({
-        createdAt: { $gte: todayStart, $lte: todayEnd },
+        createdAt: { $gte: start, $lte: end },
     }).sort({ number: -1 })
+
     return lastOrder ? lastOrder.number + 1 : 1
 }
 
@@ -150,7 +83,7 @@ export const createOrder = async (req: Request, res: Response) => {
             const updated = await Order.findByIdAndUpdate(
                 order._id,
                 { status: 'paid', paymentMethod: order.paymentMethod },
-                {  returnDocument: 'after'  },
+                { returnDocument: 'after' },
             )
             if (!updated) {
                 return res.status(404).json({ success: false, message: 'Order not found' })
@@ -232,17 +165,19 @@ export const getOrders = async (req: Request, res: Response) => {
     try {
         const { days } = req.query
         const filter: any = {}
-
         if (days) {
-            const start = new Date()
-            start.setDate(start.getDate() - Number(days))
-            start.setHours(0, 0, 0, 0)
+            const daysNumber = Number(days)
+            const { start } = getFromDayUntilNow(daysNumber)
             filter.createdAt = { $gte: start }
+        } else {
+            const { start, end } = getFromDayUntilNow(0)
+            filter.createdAt = { $gte: start, $lte: end }
         }
 
         const orders = await Order.find(filter).sort({ createdAt: -1 })
         res.json({ success: true, data: orders })
     } catch (error) {
+        console.error(error)
         res.status(500).json({ success: false, message: 'Error fetching orders', error })
     }
 }

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express'
 import Expense from '../models/expense.js'
-
+import { getFromDayUntilNow } from '../utils/index.js'
 export const createExpense = async (req: Request, res: Response) => {
     try {
         const { name, price, note } = req.body
@@ -14,15 +14,16 @@ export const createExpense = async (req: Request, res: Response) => {
 
 export const getExpenses = async (req: Request, res: Response) => {
     try {
-        const { date } = req.query
-        const targetDate = date ? new Date(date as string) : new Date()
-        const start = new Date(targetDate)
-        start.setHours(0, 0, 0, 0)
-
-        const end = new Date(targetDate)
-        end.setHours(23, 59, 59, 999)
-
-        const filter = { createdAt: { $gte: start, $lte: end } }
+        const { days } = req.query
+        const filter: any = {}
+        if (days) {
+            const daysNumber = Number(days)
+            const { start } = getFromDayUntilNow(daysNumber)
+            filter.createdAt = { $gte: start }
+        } else {
+            const { start, end } = getFromDayUntilNow(0)
+            filter.createdAt = { $gte: start, $lte: end }
+        }
         const expenses = await Expense.find(filter).sort({ createdAt: -1 })
         res.json({ success: true, data: expenses })
     } catch (error) {

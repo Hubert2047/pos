@@ -1,19 +1,15 @@
 import type { Request, Response } from 'express'
 import DailyClosing from '../models/daily-closing.js'
+import { getFromDayUntilNow, getFullDay } from '../utils/index.js'
 
 export const createDailyClosing = async (req: Request, res: Response) => {
     try {
         const { actualTotal, systemAmount, cash, reason } = req.body
-        const now = new Date()
-        const startOfDay = new Date(now)
-        startOfDay.setHours(0, 0, 0, 0)
-        const endOfDay = new Date(now)
-        endOfDay.setHours(23, 59, 59, 999)
+
+        const { start, end } = getFullDay(0)
+
         const existing = await DailyClosing.findOne({
-            createdAt: {
-                $gte: startOfDay,
-                $lte: endOfDay,
-            },
+            createdAt: { $gte: start, $lte: end },
         })
         if (existing) {
             return res.status(400).json({
@@ -21,18 +17,22 @@ export const createDailyClosing = async (req: Request, res: Response) => {
                 message: 'Today already has a DailyClosing record',
             })
         }
+
         const dailyClosing = new DailyClosing({
             actualTotal,
             systemAmount,
             cash,
             reason,
+            createdAt: new Date(), // optional, Mongo tự set createdAt
         })
         await dailyClosing.save()
+
         res.status(201).json({
             success: true,
             data: dailyClosing,
         })
     } catch (error) {
+        console.error(error)
         res.status(500).json({
             success: false,
             message: 'Error creating DailyClosing',
@@ -42,29 +42,17 @@ export const createDailyClosing = async (req: Request, res: Response) => {
 }
 export const getClosingOfYesterday = async (req: Request, res: Response) => {
     try {
-        const now = new Date()
-        const yesterday = new Date(now)
-        yesterday.setDate(yesterday.getDate() - 1)
-
-        const startOfDay = new Date(yesterday)
-        startOfDay.setHours(0, 0, 0, 0)
-
-        const endOfDay = new Date(yesterday)
-        endOfDay.setHours(23, 59, 59, 999)
-
+        const { start, end } = getFullDay(1)
         const closing = await DailyClosing.findOne({
-            createdAt: {
-                $gte: startOfDay,
-                $lte: endOfDay,
-            },
+            createdAt: { $gte: start, $lte: end },
         })
+
         res.json({
             success: true,
-            data: {
-                amount: closing ? closing.actualTotal : 0,
-            },
+            data: { amount: closing ? closing.actualTotal : 0 },
         })
     } catch (error) {
+        console.error(error)
         res.status(500).json({
             success: false,
             message: 'Error fetching yesterday closing',
@@ -74,16 +62,18 @@ export const getClosingOfYesterday = async (req: Request, res: Response) => {
 }
 export const getDailyClosings = async (req: Request, res: Response) => {
     try {
-        const { date } = req.query
-        const targetDate = date ? new Date(date as string) : new Date()
-        const start = new Date(targetDate)
-        start.setHours(0, 0, 0, 0)
-
-        const end = new Date(targetDate)
-        end.setHours(23, 59, 59, 999)
-
-        const filter = { createdAt: { $gte: start, $lte: end } }
+        const { days } = req.query
+        const filter: any = {}
+        if (days) {
+            const daysNumber = Number(days)
+            const { start } = getFromDayUntilNow(daysNumber)
+            filter.createdAt = { $gte: start }
+        } else {
+            const { start, end } = getFromDayUntilNow(0)
+            filter.createdAt = { $gte: start, $lte: end }
+        }
         const dailyClosings = await DailyClosing.find(filter).sort({ createdAt: -1 })
+
         res.json({ success: true, data: dailyClosings })
     } catch (error) {
         console.error(error)
@@ -159,5 +149,3 @@ export const updateDailyClosing = async (req: Request, res: Response) => {
         })
     }
 }
-//tính tổng thu nhập khác
-//lay so tien daily-closing hom qua

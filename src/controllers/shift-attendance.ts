@@ -1,11 +1,12 @@
 import type { Request, Response } from 'express'
 import ShiftAttendance from '../models/shift-attendance.js'
 import Employee from '../models/employee.js'
+import { toZonedTime, format } from 'date-fns-tz'
+import { TIME_ZONE } from '../utils/index.js'
 
 const getTaiwanDateString = (): string => {
-    const now = new Date()
-    const taiwanTime = new Date(now.getTime() + 8 * 60 * 60 * 1000)
-    return taiwanTime.toISOString().split('T')[0] ?? ''
+    const taiwanTime = toZonedTime(new Date(), TIME_ZONE)
+    return format(taiwanTime, 'yyyy-MM-dd', { timeZone: TIME_ZONE })
 }
 
 // ✅ CHỈ ĐƯỢC CHECK IN 1 LẦN / NGÀY
