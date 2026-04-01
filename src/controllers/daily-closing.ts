@@ -1,7 +1,9 @@
 import type { Request, Response } from 'express'
 import DailyClosing from '../models/daily-closing.js'
-import { getFromDayUntilNow, getFullDay } from '../utils/index.js'
-
+import { getFromDayUntilNow, getFullDay, TIME_ZONE } from '../utils/index.js'
+import { sendMessageToGroup } from '../services/line.js'
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'
+import { format } from 'date-fns'
 export const createDailyClosing = async (req: Request, res: Response) => {
     try {
         const { actualTotal, systemAmount, cash, reason } = req.body
@@ -26,7 +28,12 @@ export const createDailyClosing = async (req: Request, res: Response) => {
             createdAt: new Date(), // optional, Mongo tự set createdAt
         })
         await dailyClosing.save()
-
+        const now = toZonedTime(new Date(), TIME_ZONE)
+        const formatted = format(now, 'dd/MM/yyyy HH:mm')
+        sendMessageToGroup(
+            process.env.DAILY_CLOSING_LINE_GROUP_ID!,
+            `Kết toán hôm nay (${formatted}):\n- Số tiền thực tế: ${actualTotal}\n- Số tiền hệ thống: ${systemAmount}\n- Chênh lệch: ${actualTotal - systemAmount}\n- Lý do: ${reason}`,
+        )
         res.status(201).json({
             success: true,
             data: dailyClosing,

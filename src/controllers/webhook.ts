@@ -13,16 +13,16 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
         if (!events || !events.length) return res.status(200).send('No events')
 
-        await Promise.all(
-            events.map(async (event: any) => {
-                if (event.type === 'message' && event.message.type === 'text') {
-                    await client.replyMessage(event.replyToken, {
-                        type: 'text',
-                        text: `Bạn vừa gửi: ${event.message.text}`,
-                    })
-                }
-            }),
-        )
+        // await Promise.all(
+        //     events.map(async (event: any) => {
+        //         if (event.type === 'message' && event.message.type === 'text') {
+        //             await client.replyMessage(event.replyToken, {
+        //                 type: 'text',
+        //                 text: `Bạn vừa gửi: ${event.message.text}`,
+        //             })
+        //         }
+        //     }),
+        // )
 
         res.status(200).send('OK')
     } catch (err: any) {
