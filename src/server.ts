@@ -17,6 +17,7 @@ import refreshTokenRoutes from './routers/refresh-token.js'
 import auth from './routers/auth.js'
 import shiftAttendance from './routers/shift-attendance.js'
 import cookieParser from 'cookie-parser'
+import { serverCreateItem, serverUpdateItem } from './controllers/item.js'
 
 dotenv.config()
 
@@ -44,6 +45,7 @@ const app: Application = express()
     app.use('/api/daily-closing', dailyClosing)
     app.use('/api/employee', employee)
     app.use('/api/shift-attendance', shiftAttendance)
+    
     app.listen(port, () => {
         console.log(`Server is Fire at http://localhost:${port}`)
     })

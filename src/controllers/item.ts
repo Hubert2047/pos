@@ -36,7 +36,19 @@ export const getItems = async (req: Request, res: Response) => {
         })
     }
 }
+export const removeSpecificAddons = async () => {
+    try {
+        const targetIds = ['69c5e9a2a98f910697a1956c', '69c5e9a3a98f910697a1956e'].map(
+            (id) => new mongoose.Types.ObjectId(id),
+        )
 
+        const result = await Item.updateMany({ addons: { $in: targetIds } }, { $pull: { addons: { $in: targetIds } } })
+
+        console.log('Addons removed from items:', result.modifiedCount)
+    } catch (error) {
+        console.error('Error removing addons:', error)
+    }
+}
 export const getItemById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
@@ -60,10 +72,10 @@ export const createItem = async (req: Request, res: Response) => {
     }
 }
 
-export const createItem1 = async (data: {
+export const serverCreateItem = async (data: {
     name: string
-    basePrice: number
     variants: string[] | null
+    price: Map<string, number>
     addons: string[]
     categoryId: string
     noteOptions: string[]
@@ -78,7 +90,7 @@ export const createItem1 = async (data: {
         const addonsIds = data.addons.map((id) => new mongoose.Types.ObjectId(id))
         const item = new Item({
             name: data.name,
-            basePrice: data.basePrice,
+            basePrice: data.price,
             variants: data.variants,
             addons: addonsIds,
             categoryId: new mongoose.Types.ObjectId(data.categoryId),
@@ -93,10 +105,30 @@ export const createItem1 = async (data: {
         return null
     }
 }
+export const serverUpdateItem = async (name: string, price: Map<string, number>) => {
+  try {
+    const updated = await Item.findOneAndUpdate(
+      { name },
+      { $set: { price } },
+      { returnDocument: 'after' }
+    )
+
+    if (!updated) {
+      console.log(`Không tìm thấy item "${name}"`)
+      return null
+    }
+
+    console.log(`Đã cập nhật item "${name}" thành công`)
+    return updated
+  } catch (error) {
+    console.error('Update item failed:', error)
+    return null
+  }
+}
 export const updateItem = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
-        const updated = await Item.findByIdAndUpdate(id, req.body, {  returnDocument: 'after' })
+        const updated = await Item.findByIdAndUpdate(id, req.body, { returnDocument: 'after' })
         res.json({ success: true, data: updated })
     } catch (error) {
         res.status(400).json({ success: false, message: 'Error updating item', error })

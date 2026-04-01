@@ -32,7 +32,7 @@ export const createAddon = async (req: Request, res: Response) => {
         res.status(400).json({ message: 'Invalid data', error: err })
     }
 }
-export const createServerAddon = async (name: string, priceExtra: number, active: boolean) => {
+export const serverCreateAddon = async (name: string, priceExtra: number, active: boolean) => {
     try {
         const newAddon = new AddonModel({ name, priceExtra, active })
         await newAddon.save()

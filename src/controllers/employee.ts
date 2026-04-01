@@ -15,7 +15,7 @@ export const createEmployee = async (req: Request, res: Response) => {
         res.status(500).json({ success: false, message: 'Error creating Employee', error })
     }
 }
-export const createServerEmployee = async (name: string, numberId: string, note: string) => {
+export const serverCreateEmployee = async (name: string, numberId: string, note: string) => {
     try {
         const employee = await Employee.findOne({ numberId })
         if (employee) return

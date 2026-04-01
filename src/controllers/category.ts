@@ -37,7 +37,7 @@ export const createCategory = async (req: Request, res: Response) => {
         res.status(400).json({ success: false, message: 'Error creating category', error })
     }
 }
-export const createServerCategory = async (name: string) => {
+export const serverCreateCategory = async (name: string) => {
     try {
         const existing = await Category.findOne({ name })
         if (existing) return

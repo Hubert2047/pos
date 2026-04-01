@@ -39,7 +39,7 @@ export const createDiscount = async (req: Request, res: Response) => {
         })
     }
 }
-export const createDiscount1 = async (name: string, amount: number, type: string, note: string, active: boolean) => {
+export const serverCreateDiscount = async (name: string, amount: number, type: string, note: string, active: boolean) => {
     try {
         await Discount.create({
             name,
