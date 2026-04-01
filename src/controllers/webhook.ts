@@ -3,13 +3,13 @@ import { Client } from '@line/bot-sdk'
 
 export const handleWebhook = async (req: Request, res: Response) => {
     try {
-        console.log("run in")
         const config = {
             channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN!,
             channelSecret: process.env.LINE_CHANNEL_SECRET!,
         }
         const client = new Client(config)
         const events = req.body.events
+        console.log('run in', events)
 
         if (!events || !events.length) return res.status(200).send('No events')
 

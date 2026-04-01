@@ -26,14 +26,10 @@ const app: Application = express()
     await connectDB()
     app.use(cookieParser())
     const port = process.env.SERVER_BACKUP_PORT || 8080
-    app.use(
-        cors({
-            credentials: true,
-        }),
-    )
+    app.use(cors({credentials: true,}))
+    app.use('/api/webhook', webhook)
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(express.json())
-    app.use('/api/webhook', webhook)
     app.use('/api/refresh-token', refreshTokenRoutes)
     app.use('/api/auth', auth)
     app.use('/api/items', item)

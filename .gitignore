@@ -33,3 +33,4 @@ mongodb2-data
 mongo/keyfile
 keyfile
 minio-data
+.env
