@@ -17,9 +17,9 @@ import refreshTokenRoutes from './routers/refresh-token.js'
 import auth from './routers/auth.js'
 import shiftAttendance from './routers/shift-attendance.js'
 import cookieParser from 'cookie-parser'
-import { serverCreateItem, serverUpdateItem } from './controllers/item.js'
-
+import webhook from './routers/webhook.js'
 dotenv.config()
+
 
 const app: Application = express()
 ;(async () => {
@@ -33,6 +33,7 @@ const app: Application = express()
     )
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(express.json())
+    app.use('/api/webhook', webhook)
     app.use('/api/refresh-token', refreshTokenRoutes)
     app.use('/api/auth', auth)
     app.use('/api/items', item)
